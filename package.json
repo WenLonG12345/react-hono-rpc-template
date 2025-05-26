@@ -1,0 +1,59 @@
+{
+  "name": "react-hono-rpc-template",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e .env -- cross-env NODE_ENV=development tsx watch ./server/main.ts",
+    "dev:site": "vite --port 3000",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:deploy": "prisma migrate deploy && prisma generate",
+    "format": "npm run format:app && npm run format:site && npm run format:server",
+    "format:app": "biome format ./app/*.tsx ./app/**/*.tsx ./app/*.ts ./app/**/*.ts --write",
+    "format:site": "biome format ./content/*.mdx ./content/**/*.mdx ./site/*.tsx ./site/**/*.tsx ./site/*.ts ./site/**/*.ts ./site/*.astro ./site/**/*.astro --write",
+    "format:server": "biome format ./server/*.ts ./server/**/*.ts --write",
+    "lint": "biome lint ./server ./app ./site ./shared",
+    "start": "cross-env NODE_ENV=production node ./dist/main.js",
+    "build": "vite build && tsc",
+    "build:server": "tsup",
+    "deploy:site": "wrangler pages deploy ./static",
+    "preview:site": "wrangler pages dev",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-router": "^1.114.3",
+    "@tanstack/react-router-devtools": "^1.114.3",
+    "@tanstack/router-plugin": "^1.114.3",
+    "hono": "^4.7.10",
+    "hono-pino": "^0.8.0",
+    "pino": "^9.7.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.6"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.14.2",
+    "@hono/vite-dev-server": "^0.19.1",
+    "@hono/zod-validator": "^0.5.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^26.0.0",
+    "prisma": "^6.8.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5",
+    "web-vitals": "^4.2.4",
+    "zod": "^3.25.28"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
