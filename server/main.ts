@@ -6,7 +6,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import { API_URL, APP_URL, IS_PROD } from './config/server';
-import { httpLogger } from './config/utils/logger';
+import { httpLogger } from './utils/logger';
 // import { bullboardServerAdapter } from './queues';
 // import { apiRouter } from '@/api';
 
