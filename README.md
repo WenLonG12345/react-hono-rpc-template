@@ -1,290 +1,135 @@
-Welcome to your new TanStack app! 
+# React + Hono Fullstack Template
 
-# Getting Started
+A modern, reusable template for building fullstack web applications using React (with Tanstack Router) for the frontend and Hono for the backend. This template is designed for developers who want a fast, flexible alternative to Next.js, with a focus on simplicity, performance, and full control over the stack.
 
-To run this application:
+## Why This Template?
 
-```bash
-pnpm install
-pnpm start  
-```
+After experiencing lag and complexity with Next.js, this template was created to provide a smoother, more customizable fullstack experience. Use this as a starting point for any new project—just clone, update the project name, and start building!
 
-# Building For Production
+## Features
 
-To build this application for production:
+- **100% TypeScript**
+- **Backend:**
+  - [Hono](https://hono.dev) (runtime-agnostic server framework)
+  - Postgres (database)
+  - Prisma (ORM for Postgres)
+  - Auth (using better-auth, with server-side sessions via cookies)
+  - Zod validator middleware
+  - OpenAPI documentation generation (planned)
+- **Frontend:**
+  - React + [Tanstack Router](https://tanstack.com/router/latest)
+  - TailwindCSS v5
+  - shadcn/ui components
+  - @tanstack/react-query (data fetching)
+  - react-hook-form (form handling)
+  - Zustand (state management)
+- **Build System:**
+  - Vite (frontend bundler)
+  - BiomeJS (linting & formatting)
+  - tsup (server bundling)
 
-```bash
-pnpm build
-```
+## Repository Structure
 
-## Testing
+All code resides in a single repository for simplicity and ease of deployment:
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+- `/app` – Frontend application (React + Tanstack Router)
+- `/content` – Static content (blog, docs)
+- `/public` – Public assets
+- `/server` – Backend (Hono server, API, auth, database)
+- `/prisma` – Prisma schema and generated client
 
-```bash
-pnpm test
-```
+## Authentication
 
-## Styling
+Authentication follows Lucia's best practices (server-side sessions via cookies). Cookies are shared across domains, so it's recommended to host the server on a subdomain and the site on the main domain.
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+## Hono RPC: Calling Backend Functions from React
 
+This template uses Hono's handler functions as RPC endpoints, making it easy to call backend logic directly from your React frontend. You can use `@tanstack/react-query` together with the Hono client to call your backend endpoints using the `.$get`, `.$post`, etc. helpers for type-safe requests.
 
+### Example: Fetching Data from a Hono Endpoint with .$get
 
+Suppose you have a backend route in `/server/main.ts`:
 
-## Routing
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
+```ts
+// server/main.ts
+import { Hono } from "hono";
+const app = new Hono();
 
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from "@tanstack/react-router";
-
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <header>
-        <nav>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-        </nav>
-      </header>
-      <Outlet />
-      <TanStackRouterDevtools />
-    </>
-  ),
-})
-```
-
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/people",
-  loader: async () => {
-    const response = await fetch("https://swapi.dev/api/people");
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
+app.get("/api/greet", (c) => {
+  return c.json({ message: "Hello from Hono!" });
 });
 ```
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
+On the frontend, use the Hono client to call this endpoint with `.$get`:
 
-### React-Query
+```ts
+// app/routes/index.tsx
+import { hc } from 'hono/client';
+import { useQuery } from '@tanstack/react-query';
 
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
+const client = hc('/api');
 
-First add your dependencies:
-
-```bash
-pnpm add @tanstack/react-query @tanstack/react-query-devtools
-```
-
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
-
-```tsx
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// ...
-
-const queryClient = new QueryClient();
-
-// ...
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  );
-}
-```
-
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from "@tanstack/react-query";
-
-import "./App.css";
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ["people"],
-    queryFn: () =>
-      fetch("https://swapi.dev/api/people")
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
+function useGreet() {
+  return useQuery({
+    queryKey: ['greet'],
+    queryFn: async () => {
+      // Type-safe call to /api/greet
+      return client.greet.$get().then(res => res.json());
+    },
   });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
 }
 
-export default App;
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
-
-```bash
-pnpm add @tanstack/store
-```
-
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
-
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-import "./App.css";
-
-const countStore = new Store(0);
-
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
+export default function HomePage() {
+  const { data, isLoading } = useGreet();
+  if (isLoading) return <div>Loading...</div>;
+  return <div>{data?.message}</div>;
 }
-
-export default App;
 ```
 
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
+- For POST/PUT requests, use `client.yourEndpoint.$post({ json: ... })` in your query/mutation function.
+- You can organize your API calls in a `/app/api/` folder for better structure.
 
-Let's check this out by doubling the count using derived state.
+This pattern gives you a simple, type-safe way to connect your frontend and backend, similar to tRPC but with full control and flexibility using Hono's client helpers.
 
-```tsx
-import { useStore } from "@tanstack/react-store";
-import { Store, Derived } from "@tanstack/store";
-import "./App.css";
+## Getting Started
 
-const countStore = new Store(0);
+1. **Clone this template:**
 
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
+   ```sh
+   git clone <your-repo-url> <your-project-name>
+   cd <your-project-name>
+   ```
 
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
+2. **Configure environment variables:**
 
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
+   - Copy `.env.example` to `.env` and update values as needed.
 
-export default App;
-```
+3. **Set up database and dependencies:**
 
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
+   ```sh
+   ./start-database.sh
+   pnpm install
+   ```
 
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
+4. **Start the development servers:**
 
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
+   ```sh
+   pnpm dev          // hono backend (http://localhost:3000)
+   pnpm dev:app      // react frontend (http://localhost:4321)
+   ```
 
-# Demo files
+## Customization
 
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
+- Update the project name, description, and metadata as needed.
+- Add or remove features to fit your use case.
+- Refer to the `/server` and `/app` folders for backend and frontend customization.
 
-# Learn More
+## Contributing & Feedback
 
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+This template is a work in progress and aims to be as helpful as possible for the community. If you spot anything missing, have suggestions, or want to improve the template, please open an issue or submit a pull request (PR)!
+
+Your feedback and contributions are very welcome and will help make this template even better for everyone.
+
+---
+
+**Happy hacking!**
